@@ -95,7 +95,7 @@ def main():
     
     
     if module.params['state'] == 'present':
-        add_tags (module)
+        add_tags(module)
     elif module.params['state'] == 'absent':
         delete_tags(module)
 
