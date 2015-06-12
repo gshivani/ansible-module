@@ -56,31 +56,31 @@ EXAMPLES = '''
 datadog_tag:
   host: "Test host"
   operation: "get"
-  api_key: "9775a026f1ca7d1c6c5af9d94d9595a4"
-  app_key: "87ce4a24b5553d2e482ea8a8500e71b8ad4554ff"
+  api_key: "key"
+  app_key: "app_key"
 
 # Deletes all tags 
 datadog_tag:
   host: "Test host"
   operation: "remove"
-  api_key: "9775a026f1ca7d1c6c5af9d94d9595a4"
-  app_key: "87ce4a24b5553d2e482ea8a8500e71b8ad4554ff"
+  api_key: "key"
+  app_key: "app_key"
 
 # Adds the list of tags
 datadog_tag:
   host: "Test host"
   operation: "add"
   tags:['tag1']
-  api_key: "9775a026f1ca7d1c6c5af9d94d9595a4"
-  app_key: "87ce4a24b5553d2e482ea8a8500e71b8ad4554ff"
+  api_key: "key"
+  app_key: "app_key"
   
  # Updates the list of tags
 datadog_tag:
   host: "Test host"
   operation: "update"
   tags:['tag1']
-  api_key: "9775a026f1ca7d1c6c5af9d94d9595a4"
-  app_key: "87ce4a24b5553d2e482ea8a8500e71b8ad4554ff"
+  api_key: "key"
+  app_key: "app_key"
   
 '''
 
