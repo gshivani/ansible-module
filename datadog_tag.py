@@ -31,12 +31,12 @@ options:
         required: true
     host:
         description:["Tags of a particular host"]
-        required: False
-        default: null
-    operation: 
-        description: ["The type of operation to handle tags of a host"]
         required: true
-        choices: ['get', 'add', 'update', 'remove']
+        default: null
+    state: 
+        description: ["The state of the tags"]
+        required: true
+        choices: ['present', 'absent']
     source:
         description: ["The source of the tags"]
         required: false
@@ -52,36 +52,21 @@ options:
 '''
 
 EXAMPLES = '''
-# Get tags
+# Adds tags
 datadog_tag:
   host: "Test host"
-  operation: "get"
+  state: "present"
+  tags: 'Tag1, Tag2' 
   api_key: "key"
   app_key: "app_key"
 
 # Deletes all tags 
 datadog_tag:
   host: "Test host"
-  operation: "remove"
+  state: "absent"
   api_key: "key"
   app_key: "app_key"
 
-# Adds the list of tags
-datadog_tag:
-  host: "Test host"
-  operation: "add"
-  tags:['tag1']
-  api_key: "key"
-  app_key: "app_key"
-  
- # Updates the list of tags
-datadog_tag:
-  host: "Test host"
-  operation: "update"
-  tags:['tag1']
-  api_key: "key"
-  app_key: "app_key"
-  
 '''
 
 def main():
@@ -89,11 +74,11 @@ def main():
         argument_spec=dict(
             api_key=dict(required=True),
             app_key=dict(required=True),
-            host=dict(required=False),
-            operation=dict(required=True, choices=['get', 'add', 'update', 'remove']),
+            host=dict(required=True),
+            state=dict(required=True, choices=['present', 'absent']),
             source=dict(required=False, default=None),
             by_source=dict(required=False, default=False, choices=BOOLEANS),
-            tags=dict(required=False)
+            tags=dict(required=False, default=None)
         )
     )
     
@@ -109,32 +94,23 @@ def main():
     initialize(**options)
     
     
-    if module.params['operation'] == 'add':
-        create_tags (module)
-    elif module.params['operation'] == 'remove':
+    if module.params['state'] == 'present':
+        add_tags (module)
+    elif module.params['state'] == 'absent':
         delete_tags(module)
-    elif module.params['operation'] == 'update':
-        update_tags(module)
-    elif module.params['operation'] == 'get':
-        get_tags(module)
+
    
-def get_tags(module):
-    try:
+def _get_tags(module):
         hosts = api.Infrastructure.search(q=module.params['host'])
-        msg = api.Tag.get(hosts['results']['hosts'][0], by_source=module.boolean(module.params['by_source']), 
-        source=module.params['source'])
-        if 'errors' in msg:
-            module.fail_json(msg=str(msg['errors']))
-        else:
-            module.exit_json(msg=msg)
-    except Exception, e:
-        module.fail_json(msg=str(e))
-              
-def create_tags(module):
-    try:
+        tags = api.Tag.get(hosts['results']['hosts'][0], by_source=module.boolean(module.params['by_source']), 
+                          source=module.params['source'])
+        return tags
+                                
+def _create_tags(module):
+    try:       
         hosts = api.Infrastructure.search(q=module.params['host'])
         msg = api.Tag.create(hosts['results']['hosts'][0], tags=module.params['tags'].split(), 
-        source=module.params['source'])
+                            source=module.params['source'])   
         if 'errors' in msg:
             module.fail_json(msg=str(msg['errors']))
         else:
@@ -142,10 +118,10 @@ def create_tags(module):
     except Exception, e:
         module.fail_json(msg=str(e))
 
-def update_tags(module):
+def _update_tags(module):
     try:
         msg = api.Tag.update(module.params['host'], tags=module.params['tags'].split(), 
-        source=module.params['source'])
+                            source=module.params['source'])
         if 'errors' in msg:
             module.fail_json(msg=str(msg['errors']))
         else:
@@ -153,6 +129,16 @@ def update_tags(module):
     except Exception, e:
         module.fail_json(msg=str(e))
 
+
+def add_tags(module):
+        
+        tags = _get_tags(module)
+        if not tags:
+            _create_tags(module)
+        else:
+            _update_tags(module)
+            
+            
 def delete_tags(module):
     try:
         msg = api.Tag.delete(module.params['host'], source=module.params['source'])
