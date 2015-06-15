@@ -75,12 +75,13 @@ datadog_downtime:
   app_key: "app_key"
 '''
 
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
             api_key=dict(required=True),
             app_key=dict(required=True),
-            state=dict(required=True, choices=['schedule', 'cancel']),
+            state=dict(required=True, choices=['present', 'absent']),
             scope=dict(required=True),
             start=dict(required=False, default=None),
             end=dict(requried=False, default=None),
@@ -102,9 +103,9 @@ def main():
     initialize(**options)
 
     downtimes = _get_downtime(module)
-    if module.params['state'] == 'schedule':
+    if module.params['state'] == 'present':
         schedule_downtime(module, downtimes)
-    elif module.params['state'] == 'cancel':
+    elif module.params['state'] == 'absent':
         cancel_downtime(module, downtimes)
 
 
@@ -113,10 +114,10 @@ def _get_downtime(module):
     scope = [module.params['scope']]
     for downtime in api.Downtime.get_all(current_only=module.params['current_only']):
         if downtime['scope'] == scope:
-            stagingDowntimes.append(downtime)      
+            stagingDowntimes.append(downtime)
     return stagingDowntimes
-            
- 
+
+
 def _create_downtime(module):
     try:
         msg = api.Downtime.create(scope=module.params['scope'], start=module.params['start'],
@@ -141,7 +142,7 @@ def _update_downtime(module, downtimes):
         module.fail_json(msg=str(e))
 
 
-def schedule_downtime(module, downtimes):   
+def schedule_downtime(module, downtimes):
     if not downtimes:
         _create_downtime(module)
     else:
@@ -151,12 +152,10 @@ def schedule_downtime(module, downtimes):
 def cancel_downtime(module, downtimes):
     try:
         for downtime in downtimes:
-            msg = api.Downtime.delete(downtime['id'])
+            api.Downtime.delete(downtime['id'])
         module.exit_json(changed=True, msg="Downtime for scope '%s' cancelled." % (module.params['scope']))
     except Exception, e:
         module.fail_json(msg=str(e))
-            
 
 from ansible.module_utils.basic import *
-
 main()
