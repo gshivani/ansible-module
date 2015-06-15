@@ -158,6 +158,5 @@ def cancel_downtime(module, downtimes):
             
 
 from ansible.module_utils.basic import *
-import datetime
 
 main()
