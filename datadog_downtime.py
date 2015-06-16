@@ -32,7 +32,7 @@ options:
     state:
         description: ["The designated state of the monitor."]
         required: true
-        choices: ['schedule', 'cancel']
+        choices: ['present', 'absent']
     scope:
         description: ["The scope to apply the downtime"]
         required: true
@@ -61,7 +61,7 @@ EXAMPLES = '''
 # Schedule a downtime for monitor
 datadog_downtime:
   scope: "Test monitor"
-  state: "schedule"
+  state: "present"
   message: "Some message."
   api_key: "key"
   app_key: "app_key"
@@ -69,7 +69,7 @@ datadog_downtime:
 # Cancels a downtime for monitor
 datadog_downtime:
   scope: "Test monitor"
-  state: "cancel"
+  state: "absent"
   message: "Some message."
   api_key: "key"
   app_key: "app_key"
@@ -80,7 +80,7 @@ def main():
         argument_spec=dict(
             api_key=dict(required=True),
             app_key=dict(required=True),
-            state=dict(required=True, choices=['schedule', 'cancel']),
+            state=dict(required=True, choices=['present', 'absent']),
             scope=dict(required=True),
             start=dict(required=False, default=None),
             end=dict(requried=False, default=None),
@@ -102,9 +102,9 @@ def main():
     initialize(**options)
 
     downtimes = _get_downtime(module)
-    if module.params['state'] == 'schedule':
+    if module.params['state'] == 'present':
         schedule_downtime(module, downtimes)
-    elif module.params['state'] == 'cancel':
+    elif module.params['state'] == 'absent':
         cancel_downtime(module, downtimes)
 
 
