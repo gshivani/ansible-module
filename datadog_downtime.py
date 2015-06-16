@@ -32,7 +32,7 @@ options:
     state:
         description: ["The designated state of the monitor."]
         required: true
-        choices: ['schedule', 'cancel']
+        choices: ['present', 'absent']
     scope:
         description: ["The scope to apply the downtime"]
         required: true
@@ -61,15 +61,14 @@ EXAMPLES = '''
 # Schedule a downtime for monitor
 datadog_downtime:
   scope: "Test monitor"
-  state: "schedule"
+  state: "present"
   message: "Some message."
   api_key: "key"
   app_key: "app_key"
-
 # Cancels a downtime for monitor
 datadog_downtime:
   scope: "Test monitor"
-  state: "cancel"
+  state: "absent"
   message: "Some message."
   api_key: "key"
   app_key: "app_key"
