@@ -27,24 +27,50 @@ class LookupModule(LookupBase):
 
     postgresql module used to query tables in postgresql database.
 
-    Example: lookup('postgresql','database,username,password,SQL query')
+    Example: lookup('postgresql','database=database user=user password=password sql=SQL query')
 
     """
     def run(self, terms, variables, **kwargs):
 
+        ret = []
         if not isinstance(terms, list):
             terms = [ terms ]
-
-        ret = []
+        #splitting only till 3 parameters because sql query has ' ' inside
         for term in terms:
-            (database,user,password,sql) = term.split(',')
+            params = term.split(' ',3)
 
+        paramvals = {
+            'database' : 'database',
+            'user' : 'user',
+            'password' : 'password',
+            'sql' : 'query',
+        }
+        try:
+            for param in params:
+                name, value = param.split('=')
+                assert(name in paramvals)
+                paramvals[name] = value
+        except (ValueError, AssertionError) as e:
+            raise AnsibleError(e)
+        #assigning args for postgresql connect 
+        database = paramvals['database']
+        user = paramvals['user']
+        password = paramvals['password']
+        sql = paramvals['sql']
+        #Connection to postgresql
         con = None
-        con = psycopg2.connect(database=database, user=user, password=password)
-        cur = con.cursor()
-        cur.execute(sql)
-        rows = cur.fetchall()
-        for row in rows:
-            row_string = str(row)
-            ret.append(row_string)
+        try:
+            con = psycopg2.connect(database=database, user=user, password=password)
+            cur = con.cursor()
+            cur.execute(sql)
+            rows = cur.fetchall()
+            for row in rows:
+                row_string = str(row)
+                ret.append(row_string)
+        except:
+             raise AnsibleError("Connection Failed or something's wrong")
+
+        finally:
+            if con:
+                con.close()
         return ret
